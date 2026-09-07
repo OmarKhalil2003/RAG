@@ -199,18 +199,26 @@ class GeminiLLMClient:
         import google.generativeai as genai
         
         # Build candidate fallback sequence starting with preferred model
-        preferred = (self.model_name or "gemini-3.1-flash-lite").strip()
+        preferred = (self.model_name or "gemini-2.5-flash").strip()
         candidates = [preferred]
         for c in [
-            "gemini-3.1-flash-lite",
-            "gemini-3-flash-preview",
-            "gemini-3.5-flash-lite",
+            "gemini-2.5-flash",
+            "gemini-2.0-flash",
+            "gemini-1.5-flash",
             "gemini-flash-latest",
-            "gemini-flash-lite-latest",
-            "gemini-3.5-flash"
+            "gemini-2.5-pro",
+            "gemini-1.5-pro",
+            "gemini-3-flash-preview"
         ]:
             if c not in candidates:
                 candidates.append(c)
+
+        recoverable_keywords = [
+            "not found", "no longer available", "unsupported", "404",
+            "resourceexhausted", "quota", "rate", "overloaded",
+            "serviceunavailable", "unavailable", "503", "500", "502", "504",
+            "internal", "deadline", "timeout", "connection", "reset", "grpc"
+        ]
 
         last_error = None
         for candidate in candidates:
@@ -233,39 +241,48 @@ class GeminiLLMClient:
             except Exception as e:
                 last_error = e
                 err_msg = str(e).lower()
-                # If model is not found, deprecated, or hit rate limit/quota, try next model candidate
-                if any(x in err_msg for x in ["not found", "no longer available", "unsupported", "404", "resourceexhausted", "quota"]):
+                if any(x in err_msg for x in recoverable_keywords):
+                    import time
+                    time.sleep(0.3)
                     continue
-                # For invalid api keys or other fatal auth errors, re-raise immediately
                 raise e
 
         if last_error:
-            raise last_error
+            return f"⚠️ Service Notice: Google AI temporarily unavailable ({last_error}). Please retry."
         return ""
 
     def generate_stream(self, *, system_prompt: str, user_prompt: str) -> Iterator[str]:
         if not self.api_key:
             raise ValueError(
                 "Gemini API key is not configured. Please set GEMINI_API_KEY in your .env file "
-                "or enter it directly in the Streamlit sidebar."
+                "or Streamlit Secrets."
             )
         import google.generativeai as genai
 
-        preferred = (self.model_name or "gemini-3.1-flash-lite").strip()
+        preferred = (self.model_name or "gemini-2.5-flash").strip()
         candidates = [preferred]
         for c in [
-            "gemini-3.1-flash-lite",
-            "gemini-3-flash-preview",
-            "gemini-3.5-flash-lite",
+            "gemini-2.5-flash",
+            "gemini-2.0-flash",
+            "gemini-1.5-flash",
             "gemini-flash-latest",
-            "gemini-flash-lite-latest",
-            "gemini-3.5-flash"
+            "gemini-2.5-pro",
+            "gemini-1.5-pro",
+            "gemini-3-flash-preview"
         ]:
             if c not in candidates:
                 candidates.append(c)
 
+        recoverable_keywords = [
+            "not found", "no longer available", "unsupported", "404",
+            "resourceexhausted", "quota", "rate", "overloaded",
+            "serviceunavailable", "unavailable", "503", "500", "502", "504",
+            "internal", "deadline", "timeout", "connection", "reset", "grpc"
+        ]
+
         last_error = None
         for candidate in candidates:
+            yielded_any = False
             try:
                 clean_name = candidate.replace("models/", "")
                 model = genai.GenerativeModel(
@@ -280,7 +297,6 @@ class GeminiLLMClient:
                     ),
                     stream=True
                 )
-                yielded_any = False
                 for chunk in response:
                     if chunk and chunk.text:
                         yielded_any = True
@@ -290,13 +306,18 @@ class GeminiLLMClient:
                     return
             except Exception as e:
                 last_error = e
+                # If we already yielded tokens before failure, do not re-run another candidate to prevent duplicate answers
+                if yielded_any:
+                    return
                 err_msg = str(e).lower()
-                if any(x in err_msg for x in ["not found", "no longer available", "unsupported", "404", "resourceexhausted", "quota"]):
+                if any(x in err_msg for x in recoverable_keywords):
+                    import time
+                    time.sleep(0.3)
                     continue
                 raise e
 
         if last_error:
-            raise last_error
+            yield f"⚠️ عذراً، تعذر إكمال الإجابة من Google AI نظراً لضغط مؤقت على الخدمة ({last_error}). يرجى إعادة المحاولة."
 
 
 def get_llm_client(provider: str | None = None, api_key: str | None = None, model: str | None = None) -> LLMClient:

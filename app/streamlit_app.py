@@ -439,22 +439,23 @@ with st.sidebar:
     custom_llm_client = None
     if "Gemini" in selected_provider_label:
         gemini_model_options = [
-            "gemini-3.1-flash-lite",
-            "gemini-3-flash-preview",
+            "gemini-2.5-flash",
+            "gemini-2.0-flash",
+            "gemini-1.5-flash",
             "gemini-flash-latest",
-            "gemini-flash-lite-latest",
-            "gemini-3.5-flash-lite",
-            "gemini-3.5-flash",
+            "gemini-2.5-pro",
+            "gemini-1.5-pro",
+            "gemini-3-flash-preview",
             "Custom Model Name..."
         ]
         selected_choice = st.selectbox(
             "Gemini Model Edition:",
             gemini_model_options,
             index=0,
-            help="gemini-3.1-flash-lite and gemini-3-flash-preview offer the fastest speed and highest quota availability."
+            help="gemini-2.5-flash and gemini-2.0-flash offer the fastest speed, highest reliability, and maximum quota availability."
         )
         if selected_choice == "Custom Model Name...":
-            selected_model = st.text_input("Enter Model Identifier:", value="gemini-3.1-flash-lite")
+            selected_model = st.text_input("Enter Model Identifier:", value="gemini-2.5-flash")
         else:
             selected_model = selected_choice
         
@@ -465,17 +466,11 @@ with st.sidebar:
             except Exception:
                 pass
 
-        api_key_val = st.text_input(
-            "Gemini API Key:",
-            value=env_key,
-            type="password",
-            help="Enter your Google AI Studio API key or configure GEMINI_API_KEY in .env / Streamlit Secrets"
-        )
-        if api_key_val:
-            custom_llm_client = GeminiLLMClient(api_key=api_key_val, model_name=selected_model)
+        if env_key:
+            custom_llm_client = GeminiLLMClient(api_key=env_key, model_name=selected_model)
             st.success(f"● Connected · {selected_model}")
         else:
-            st.info("● Running via deterministic test generator until Gemini key is entered.")
+            st.info("● Running via deterministic test generator (Configure GEMINI_API_KEY in Streamlit Secrets).")
             custom_llm_client = MockLLMClient()
 
     elif "OpenAI" in selected_provider_label:
@@ -737,7 +732,11 @@ if active_query and active_query.strip():
                     law_type=active_statute.get("law_type", "civil"),
                     history=prior_history
                 )
-                full_answer = st.write_stream(stream_gen)
+                try:
+                    full_answer = st.write_stream(stream_gen)
+                except Exception as stream_err:
+                    full_answer = f"⚠️ Notice: Generation encountered a temporary service issue ({stream_err}). Please retry."
+                    st.warning(full_answer)
                 final_response = finalize_fn(full_answer)
             else:
                 final_response = rag_service.ask(
