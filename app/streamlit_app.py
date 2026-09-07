@@ -420,7 +420,14 @@ with st.sidebar:
         "Deterministic Engine (Offline Grounded Mock)"
     ]
     # Default to Gemini if configured
-    default_idx = 0 if "gemini" in settings.llm_provider.lower() else (1 if "openai" in settings.llm_provider.lower() else 2)
+    configured_provider = settings.llm_provider
+    if hasattr(st, "secrets"):
+        try:
+            configured_provider = st.secrets.get("LLM_PROVIDER", configured_provider)
+        except Exception:
+            pass
+
+    default_idx = 0 if "gemini" in configured_provider.lower() else (1 if "openai" in configured_provider.lower() else 2)
     selected_provider_label = st.selectbox("Provider:", llm_providers, index=default_idx)
 
     custom_llm_client = None
@@ -446,11 +453,17 @@ with st.sidebar:
             selected_model = selected_choice
         
         env_key = settings.gemini_api_key or os.getenv("GEMINI_API_KEY", "")
+        if not env_key and hasattr(st, "secrets"):
+            try:
+                env_key = str(st.secrets.get("GEMINI_API_KEY", ""))
+            except Exception:
+                pass
+
         api_key_val = st.text_input(
             "Gemini API Key:",
             value=env_key,
             type="password",
-            help="Enter your Google AI Studio API key or configure GEMINI_API_KEY in .env"
+            help="Enter your Google AI Studio API key or configure GEMINI_API_KEY in .env / Streamlit Secrets"
         )
         if api_key_val:
             custom_llm_client = GeminiLLMClient(api_key=api_key_val, model_name=selected_model)
@@ -463,6 +476,12 @@ with st.sidebar:
         openai_models = ["gpt-4o-mini", "gpt-4o"]
         selected_oa_model = st.selectbox("Model Edition:", openai_models, index=0)
         env_key = settings.openai_api_key or os.getenv("OPENAI_API_KEY", "")
+        if not env_key and hasattr(st, "secrets"):
+            try:
+                env_key = str(st.secrets.get("OPENAI_API_KEY", ""))
+            except Exception:
+                pass
+
         openai_key = st.text_input("OpenAI API Key:", value=env_key, type="password")
         if openai_key:
             custom_llm_client = OpenAILLMClient(api_key=openai_key, model=selected_oa_model)
