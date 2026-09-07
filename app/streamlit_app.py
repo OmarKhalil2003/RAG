@@ -218,7 +218,17 @@ st.markdown("""
 
 @st.cache_resource
 def get_rag_service():
-    return RAGService()
+    import sys
+    import importlib
+    for mod_name in list(sys.modules.keys()):
+        if mod_name.startswith("legal_rag"):
+            try:
+                importlib.reload(sys.modules[mod_name])
+            except Exception:
+                pass
+    import legal_rag.pipeline
+    importlib.reload(legal_rag.pipeline)
+    return legal_rag.pipeline.RAGService()
 
 
 @st.cache_data
@@ -314,6 +324,29 @@ def ensure_all_corpora_indexed(_rag_service, corpora):
 
 corpora = get_corpora_registry()
 rag_service = get_rag_service()
+
+# Self-healing check: if cached instance lacks ask_stream or stale submodules from prior session, force-clear and reload
+try:
+    import inspect
+    from legal_rag.generation.prompts import construct_prompt
+    _has_history = "history" in inspect.signature(construct_prompt).parameters
+except Exception:
+    _has_history = False
+
+if not hasattr(rag_service, "ask_stream") or not _has_history:
+    st.cache_resource.clear()
+    import sys
+    import importlib
+    for mod_name in list(sys.modules.keys()):
+        if mod_name.startswith("legal_rag"):
+            try:
+                importlib.reload(sys.modules[mod_name])
+            except Exception:
+                pass
+    import legal_rag.pipeline
+    importlib.reload(legal_rag.pipeline)
+    rag_service = legal_rag.pipeline.RAGService()
+
 ensure_all_corpora_indexed(rag_service, corpora)
 
 
@@ -442,255 +475,55 @@ with st.sidebar:
         st.info("● Offline deterministic legal evaluation engine active.")
 
     st.markdown("---")
-    st.markdown("### Cache Administration")
+    st.markdown("### Conversation & Cache Controls")
+    if st.button("🗑️ New Consultation (مسح المحادثة)", use_container_width=True):
+        st.session_state["messages"] = []
+        st.rerun()
+
     st.caption(f"Semantic Cache Floor: Cosine Distance ≤ {settings.semantic_cache_distance_threshold:.2f}")
     if st.button("Flush Semantic Cache", use_container_width=True):
         rag_service.cache.clear()
         st.cache_data.clear()
         st.cache_resource.clear()
-        st.success("Semantic cache and session state flushed.")
-
-    with st.expander("⚙️ System Specifications & Architecture", expanded=False):
-        st.markdown(f"**Jurisdiction:** {active_statute.get('jurisdiction', 'Egypt')}")
-        st.markdown(f"**Active Statute:** {active_statute.get('law_name_en')}")
-        st.markdown(f"**Arabic Title:** {active_statute.get('law_name_ar')}")
-        st.markdown(f"**Enacted:** {active_statute.get('law_number')}")
-        st.markdown(f"**Articles Cataloged:** {active_statute.get('total_articles')} Articles")
-        st.markdown(f"**Repealed Provisions Flagged:** {active_statute.get('repealed_count', 0)} articles")
-        st.markdown(f"**Multi-Statute Index:** 1,207 articles indexed across {len(corpora)} statutes")
-        st.markdown(f"**Vector Store:** Qdrant (`{settings.qdrant_collection_name}`)")
-        st.markdown(f"**Dense Embedding:** BAAI/bge-m3 (1024-dim)")
-        st.markdown(f"**Sparse Index:** BM25Plus Lexical")
-        st.markdown(f"**Cross-Encoder:** BAAI/bge-reranker-v2-m3")
-        st.markdown(f"**Statutory Isolation:** Isolated by `law_type='{active_statute['law_type']}'`")
-
-    with st.expander("📊 RAGAS Evaluation Benchmarks", expanded=False):
-        ragas_report_file = project_root / "evaluation" / "ragas_report.json"
-        if ragas_report_file.exists():
-            try:
-                with open(ragas_report_file, "r", encoding="utf-8") as f:
-                    ragas_data = json.load(f)
-                agg = ragas_data.get("aggregate_scores", {})
-                st.markdown(f"**Evaluator Engine:** `{ragas_data.get('provider', 'N/A').upper()}`")
-                st.markdown(f"**Total Benchmark Cases:** `{ragas_data.get('total_cases', 0)}`")
-                
-                c_m1, c_m2 = st.columns(2)
-                c_m1.metric("Faithfulness", f"{agg.get('faithfulness', 0.0) * 100:.1f}%")
-                c_m2.metric("Relevancy", f"{agg.get('answer_relevancy', 0.0) * 100:.1f}%")
-                
-                c_m3, c_m4 = st.columns(2)
-                c_m3.metric("Precision", f"{agg.get('context_precision', 0.0) * 100:.1f}%")
-                c_m4.metric("Recall", f"{agg.get('context_recall', 0.0) * 100:.1f}%")
-                
-                breakdown = ragas_data.get("statute_breakdown", {})
-                if active_statute["law_type"] in breakdown:
-                    st_scores = breakdown[active_statute["law_type"]]
-                    st.caption(f"**Active Statute ({active_statute['law_name_en']}):**")
-                    st.caption(f"Faithfulness: {st_scores['faithfulness']*100:.1f}% · Recall: {st_scores['context_recall']*100:.1f}%")
-            except Exception as e:
-                st.caption(f"Report loading notice: {e}")
-        else:
-            st.caption("No RAGAS report found. Run `python evaluation/run_ragas_eval.py` to generate.")
-
-        if st.button("Run Quick RAGAS Audit (Sample)", use_container_width=True):
-            with st.spinner("Running live RAGAS evaluation sample..."):
-                from legal_rag.evaluation.ragas_adapter import prepare_sample, execute_ragas_evaluation
-                sample_cases = [
-                    {
-                        "question": "ما هي أحكام المادة 147 من القانون المدني؟",
-                        "expected_law_type": "civil",
-                        "expected_jurisdiction": "Egypt",
-                        "expected_articles": [147],
-                        "ground_truth": "العقد شريعة المتعاقدين وتطبق نظرية الظروف الطارئة."
-                    },
-                    {
-                        "question": "ما هو نطاق سريان قانون التحكيم المصري؟",
-                        "expected_law_type": "arbitration",
-                        "expected_jurisdiction": "Egypt",
-                        "expected_articles": [1],
-                        "ground_truth": "يسري على كل تحكيم بين أشخاص القانون العام أو الخاص في مصر."
-                    }
-                ]
-                live_samples = []
-                for sc in sample_cases:
-                    resp = rag_service.ask(
-                        question=sc["question"],
-                        role=user_role,
-                        jurisdiction=sc["expected_jurisdiction"],
-                        law_type=sc["expected_law_type"]
-                    )
-                    live_samples.append(prepare_sample(
-                        question=sc["question"],
-                        response=resp,
-                        ground_truth=sc["ground_truth"],
-                        metadata=sc
-                    ))
-                live_eval = execute_ragas_evaluation(live_samples, provider="mock")
-                st.success(f"Audit Complete ({live_eval['provider']}): Faithfulness: {live_eval['aggregate_scores']['faithfulness']*100:.1f}% | Precision: {live_eval['aggregate_scores']['context_precision']*100:.1f}% | Recall: {live_eval['aggregate_scores']['context_recall']*100:.1f}%")
+        st.success("Semantic cache flushed.")
 
 
 
-# --- MAIN INTERFACE: LEGAL MASTHEAD ---
-st.markdown(f"""
-<div class="masthead-container">
-    <div class="masthead-brand">
-        JURIS-EGYPT <span>·</span> STATUTORY INTELLIGENCE
-    </div>
-    <div class="masthead-subtitle">
-        Bilingual Legal Research & Statutory Grounding Platform · {active_statute['law_name_en']} ({active_statute['law_number']})
-    </div>
-</div>
-""", unsafe_allow_html=True)
 
-
-# --- STATUTORY QUERY PRESETS ---
-st.markdown(f"<div class='section-label'>Statutory Reference Docket — {active_statute['law_name_en']} <span class='section-subtitle'>Select a curated docket case or enter a bespoke statutory inquiry</span></div>", unsafe_allow_html=True)
-
-# State initialization
-if "query_input" not in st.session_state:
-    if active_statute["id"] == "arbitration":
-        st.session_state["query_input"] = "ما هي الشروط الشكلية والموضوعية لصحة اتفاق التحكيم وفقاً للمادة 10 من قانون التحكيم المصري؟"
-    else:
-        st.session_state["query_input"] = "ما هي أحكام المادة 157 من القانون المدني المصري وحالات فسخ العقد والتعويض عند الإخلال بالالتزام؟"
-
-if "trigger_analysis" not in st.session_state:
-    st.session_state["trigger_analysis"] = False
-
-col_d1, col_d2, col_d3, col_d4, col_d5, col_d6 = st.columns(6)
-
-if active_statute["id"] == "arbitration":
-    if col_d1.button("Art. 1 (Scope)", help="Scope of application of Law 27/1994", use_container_width=True):
-        st.session_state["query_input"] = "ما هو نطاق سريان قانون التحكيم المصري رقم 27 لسنة 1994 وفقاً للمادة 1؟"
-        st.session_state["trigger_analysis"] = True
-        st.rerun()
-
-    if col_d2.button("المادة ١٠ (Indic)", help="Article 10: Arbitration agreement requirements", use_container_width=True):
-        st.session_state["query_input"] = "ما هي الشروط الشكلية والموضوعية لصحة اتفاق التحكيم وفقاً للمادة ١٠ من قانون التحكيم؟"
-        st.session_state["trigger_analysis"] = True
-        st.rerun()
-
-    if col_d3.button("Art. 22 (Competence)", help="Article 22: Competence-Competence principle", use_container_width=True):
-        st.session_state["query_input"] = "ما هي سلطة هيئة التحكيم في الفصل في اختصاصها ومبدأ استقلال شرط التحكيم وفقاً للمادة 22؟"
-        st.session_state["trigger_analysis"] = True
-        st.rerun()
-
-    if col_d4.button("Art. 39 (Governing Law)", help="Article 39: Substantive governing law", use_container_width=True):
-        st.session_state["query_input"] = "ما هو القانون الواجب التطبيق على موضوع النزاع في التحكيم وفقاً للمادة 39؟"
-        st.session_state["trigger_analysis"] = True
-        st.rerun()
-
-    if col_d5.button("Art. 53 (Nullity)", help="Article 53: Actions for nullity of arbitral awards", use_container_width=True):
-        st.session_state["query_input"] = "ما هي حالات وإجراءات رفع دعوى بطلان حكم التحكيم وفقاً للمادة 53 من قانون التحكيم؟"
-        st.session_state["trigger_analysis"] = True
-        st.rerun()
-
-    if col_d6.button("Penal (Out of Scope)", help="Test domain gate refusal on criminal law query", use_container_width=True):
-        st.session_state["query_input"] = "ما هي عقوبة السرقة بالإكراه في القانون المصري؟"
-        st.session_state["trigger_analysis"] = True
-        st.rerun()
-
-else:
-    if col_d1.button("Art. 147 (Western)", help="Article 147: Western numeral inquiry", use_container_width=True):
-        st.session_state["query_input"] = "ما هي أحكام المادة 147 من القانون المدني المصري ونظرية الظروف الطارئة؟"
-        st.session_state["trigger_analysis"] = True
-        st.rerun()
-
-    if col_d2.button("المادة ١٤٧ (Indic)", help="Article 147: Arabic-Indic numeral inquiry", use_container_width=True):
-        st.session_state["query_input"] = "ما هي أحكام المادة ١٤٧ من القانون المدني المصري ونظرية الظروف الطارئة؟"
-        st.session_state["trigger_analysis"] = True
-        st.rerun()
-
-    if col_d3.button("Art. 157 (Breach)", help="Article 157: Bilateral contract breach & rescission", use_container_width=True):
-        st.session_state["query_input"] = "ما هي أحكام المادة 157 من القانون المدني المصري وحالات فسخ العقد والتعويض عند الإخلال بالالتزام؟"
-        st.session_state["trigger_analysis"] = True
-        st.rerun()
-
-    if col_d4.button("Art. 148 (Good Faith)", help="Article 148: Good faith performance", use_container_width=True):
-        st.session_state["query_input"] = "ما هي أحكام المادة 148 من القانون المدني وقواعد تنفيذ العقود وفقاً لمبدأ حسن النية؟"
-        st.session_state["trigger_analysis"] = True
-        st.rerun()
-
-    if col_d5.button("Art. 54 (Repealed)", help="Repealed provision status verification", use_container_width=True):
-        st.session_state["query_input"] = "ما هو الوضع القانوني الحالي للمادة 54 من القانون المدني المصري؟"
-        st.session_state["trigger_analysis"] = True
-        st.rerun()
-
-    if col_d6.button("Penal (Out of Scope)", help="Test domain gate refusal on criminal law query", use_container_width=True):
-        st.session_state["query_input"] = "ما هي عقوبة القتل العمد مع سبق الإصرار في القانون المصري؟"
-        st.session_state["trigger_analysis"] = True
-        st.rerun()
-
-
-# --- QUERY SEARCH INPUT ---
-query_text = st.text_input(
-    "Statutory Inquiry / Legal Query:",
-    value=st.session_state["query_input"],
-    placeholder=f"Enter statutory article, legal principle, or substantive query for {active_statute['law_name_en']} in Arabic or English...",
-    label_visibility="collapsed"
-)
-st.session_state["query_input"] = query_text
-
-btn_col, _ = st.columns([3, 7])
-manual_execute = btn_col.button("Conduct Legal Analysis →", type="primary", use_container_width=True)
-
-should_run = manual_execute or st.session_state.get("trigger_analysis", False)
-# Clear trigger so subsequent reruns don't loop
-st.session_state["trigger_analysis"] = False
-
-if should_run and query_text.strip():
-    # Inject user-selected LLM client
-    rag_service.llm_client = custom_llm_client
-
-    with st.spinner("Executing hybrid retrieval, reranking statutory candidates, and validating legal grounding..."):
-        response = rag_service.ask(
-            question=query_text.strip(),
-            role=user_role,
-            jurisdiction=active_statute.get("jurisdiction", "Egypt"),
-            law_type=active_statute.get("law_type", "civil")
-        )
-
-    # Detect Arabic for typography
-    is_arabic_query = response.query_signals.language == "ar"
-
-    # --- TELEMETRY AUDIT STRIP ---
-    cache_badge = '<span class="status-cached">⚡ SEMANTIC CACHE HIT</span>' if response.cached else '<span class="status-active">● RETRIEVED FROM CORPUS</span>'
-    st.markdown(f"""
-    <div class="audit-strip">
-        <div class="audit-item"><strong>Audit Status:</strong> {cache_badge}</div>
-        <div class="audit-item"><strong>Execution Latency:</strong> {response.latency_ms:.1f} ms</div>
-        <div class="audit-item"><strong>Authorities Cited:</strong> {response.retrieval_count} Provisions</div>
-        <div class="audit-item"><strong>Query Language:</strong> {response.query_signals.language.upper()}</div>
-        <div class="audit-item"><strong>Grounding Gate:</strong> {'VERIFIED COMPLIANT' if response.sources else 'REFUSAL ENFORCED'}</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # --- LEGAL OPINION DOSSIER ---
+# --- HELPER: RENDER ASSISTANT LEGAL DOSSIER ---
+def render_assistant_dossier(msg_data: dict, statute_info: dict):
+    response = msg_data.get("response")
+    role = msg_data.get("role_persona", UserRole.LAWYER)
+    answer = msg_data.get("content", "")
+    
     persona_labels = {
         UserRole.LAWYER: "Formal Legal Counsel Memorandum",
         UserRole.CITIZEN: "Client Advisory Summary",
         UserRole.LAW_STUDENT: "Doctrinal Analysis & Case Commentary",
         UserRole.LEGAL_RESEARCHER: "Systematic Legislative Exegesis",
     }
-    dossier_persona_name = persona_labels.get(user_role, "Legal Memorandum")
+    dossier_persona_name = persona_labels.get(role, "Legal Opinion")
     
-    body_class = "dossier-body-ar" if is_arabic_query else "dossier-body"
+    is_ar = any('\u0600' <= c <= '\u06FF' for c in answer)
+    body_class = "dossier-body-ar" if is_ar else "dossier-body"
     
-    # Build compact citation badges
+    sources = response.sources if response else msg_data.get("sources", [])
     citation_badges = []
-    if response.sources:
-        for s in response.sources:
-            if s.is_repealed:
-                badge = f'<span style="background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; font-size: 0.78rem; font-weight: 600; padding: 4px 10px; border-radius: 4px; display: inline-block;">📜 {s.citation} (REPEALED / ملغاة)</span>'
+    if sources:
+        for s in sources:
+            is_rep = getattr(s, "is_repealed", False) if hasattr(s, "is_repealed") else s.get("is_repealed", False)
+            cit = getattr(s, "citation", "") if hasattr(s, "citation") else s.get("citation", "")
+            if is_rep:
+                badge = f'<span style="background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; font-size: 0.78rem; font-weight: 600; padding: 4px 10px; border-radius: 4px; display: inline-block;">📜 {cit} (REPEALED / ملغاة)</span>'
             else:
-                badge = f'<span style="background: #EFF6FF; color: #1E40AF; border: 1px solid #BFDBFE; font-size: 0.78rem; font-weight: 600; padding: 4px 10px; border-radius: 4px; display: inline-block;">📜 {s.citation} (ACTIVE)</span>'
+                badge = f'<span style="background: #EFF6FF; color: #1E40AF; border: 1px solid #BFDBFE; font-size: 0.78rem; font-weight: 600; padding: 4px 10px; border-radius: 4px; display: inline-block;">📜 {cit} (ACTIVE)</span>'
             citation_badges.append(badge)
     badges_html = " ".join(citation_badges)
-
+    
     citations_section = ""
     if badges_html:
-        citations_section = f'<div style="margin-top: 20px; padding-top: 14px; border-top: 1px solid #E2E8F0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;"><span style="font-family: \'Inter\', sans-serif; font-size: 0.8rem; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.04em;">Referenced Provisions:</span> {badges_html}</div>'
+        citations_section = f'<div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(128,128,128,0.25); display: flex; flex-wrap: wrap; gap: 8px; align-items: center;"><span style="font-family: \'Inter\', sans-serif; font-size: 0.8rem; font-weight: 700; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.04em;">Referenced Provisions:</span> {badges_html}</div>'
 
-    # Note: Column-0 alignment ensures Markdown parser does not treat HTML as indented code blocks (<pre><code>)
     dossier_html = f"""<div class="dossier-card">
 <div class="dossier-header">
 <div class="dossier-title">Legal Opinion & Substantive Analysis</div>
@@ -698,53 +531,208 @@ if should_run and query_text.strip():
 </div>
 <div class="{body_class}">
 
-{response.answer}
+{answer}
 
 </div>
 {citations_section}
 </div>"""
     st.markdown(dossier_html, unsafe_allow_html=True)
 
+    # Inspect Referenced Statutory Provisions
+    if sources:
+        with st.expander(f"📖 Inspect Referenced Statutory Provisions ({len(sources)} Articles Cited)", expanded=False):
+            for idx, src in enumerate(sources, 1):
+                txt_ar = getattr(src, "text_ar", "") if hasattr(src, "text_ar") else src.get("text_ar", "")
+                txt_en = getattr(src, "text_en", "") if hasattr(src, "text_en") else src.get("text_en", "")
+                hier = getattr(src, "hierarchy", "") if hasattr(src, "hierarchy") else src.get("hierarchy", "")
+                cit = getattr(src, "citation", "") if hasattr(src, "citation") else src.get("citation", "")
+                is_rep = getattr(src, "is_repealed", False) if hasattr(src, "is_repealed") else src.get("is_repealed", False)
 
-    # --- OPTIONAL COLLAPSED STATUTORY PROVISIONS (CLEAN & NON-INTRUSIVE) ---
-    if response.sources:
-        with st.expander(f"📖 Inspect Referenced Statutory Provisions ({len(response.sources)} Articles Cited)", expanded=False):
-            for idx, src in enumerate(response.sources, 1):
-                clean_ar_text = clean_arabic_ocr_artifacts(src.text_ar) if src.text_ar else "النص غير متاح"
-                clean_en_text = src.text_en if src.text_en else "Translation not available"
-                clean_hier = clean_arabic_ocr_artifacts(src.hierarchy) if src.hierarchy else active_statute["law_name_en"]
-                
-                title_suffix = " · [REPEALED / ملغاة]" if src.is_repealed else ""
-                st.markdown(f"**Authority {idx}: {src.citation}{title_suffix}**")
+                clean_ar_text = clean_arabic_ocr_artifacts(txt_ar) if txt_ar else "النص غير متاح"
+                clean_en_text = txt_en if txt_en else "Translation not available"
+                clean_hier = clean_arabic_ocr_artifacts(hier) if hier else statute_info.get("law_name_en", "Statute")
+
+                title_suffix = " · [REPEALED / ملغاة]" if is_rep else ""
+                st.markdown(f"**Authority {idx}: {cit}{title_suffix}**")
                 st.caption(f"🏛️ {clean_hier}")
-                
-                if src.is_repealed:
+
+                if is_rep:
                     st.warning("⚠️ STATUTORY NOTICE: This provision was repealed by subsequent legislation and is no longer active law. (تنبيه تشريعي: ألغيت هذه المادة بموجب تشريع لاحق ولا تعد حكماً سارياً).")
-                
+
                 tab_ar, tab_en = st.tabs(["Official Arabic Text (النص الرسمي)", "English Comparative Text"])
                 with tab_ar:
                     st.markdown(f"<div class='arabic-statute-text'>{clean_ar_text}</div>", unsafe_allow_html=True)
                 with tab_en:
                     st.markdown(f"<div class='english-statute-text'>{clean_en_text}</div>", unsafe_allow_html=True)
-                
-                if idx < len(response.sources):
-                    st.markdown("<div style='margin-bottom: 16px; border-bottom: 1px solid #F1F5F9;'></div>", unsafe_allow_html=True)
-    else:
-        st.info(f"No statutory authorities cited. The inquiry was determined to be outside the jurisdiction or scope of {active_statute['law_name_en']}.")
 
-    # --- PROCEDURAL & DIAGNOSTIC AUDIT (COLLAPSED BY DEFAULT) ---
-    with st.expander("🛠️ Grounding Verification Diagnostics (Audit Log)", expanded=False):
-        c_p1, c_p2 = st.columns(2)
-        with c_p1:
-            st.markdown(f"**Substantive Law Scope:** `{active_statute.get('law_name_en')}` ({active_statute.get('law_number')})")
-            st.markdown(f"**Jurisdiction:** `{active_statute.get('jurisdiction')}`")
-            st.markdown(f"**Statute Partition (law_type):** `{active_statute.get('law_type')}`")
-            st.markdown(f"**Active Advisory Profile:** `{user_role.value}`")
-        with c_p2:
-            st.markdown(f"**Detected Article References:** `{response.query_signals.article_numbers}`")
-            st.markdown(f"**Normalized Ingestion Query:** `{response.query_signals.normalized_query}`")
-            st.markdown(f"**Semantic Distance Floor:** `{settings.semantic_cache_distance_threshold}`")
-            st.markdown(f"**Grounding Gate Evaluation:** `{'PASSED - Statutorily Grounded' if response.sources else 'REFUSED - Scope or Relevance Boundary'}`")
-            st.markdown(f"**Active Vector Store Collection:** `{settings.qdrant_collection_name}`")
+                if idx < len(sources):
+                    st.markdown("<div style='margin-bottom: 16px; border-bottom: 1px solid rgba(128,128,128,0.2);'></div>", unsafe_allow_html=True)
+    elif response and not response.sources:
+        st.info(f"No statutory authorities cited. The inquiry was determined to be outside the jurisdiction or scope of {statute_info['law_name_en']}.")
+
+    # Telemetry Strip
+    if response:
+        cache_badge = '<span class="status-cached">⚡ SEMANTIC CACHE HIT</span>' if response.cached else '<span class="status-active">● RETRIEVED FROM CORPUS</span>'
+        st.markdown(f"""
+        <div class="audit-strip">
+            <div class="audit-item"><strong>Audit Status:</strong> {cache_badge}</div>
+            <div class="audit-item"><strong>Execution Latency:</strong> {response.latency_ms:.1f} ms</div>
+            <div class="audit-item"><strong>Authorities Cited:</strong> {response.retrieval_count} Provisions</div>
+            <div class="audit-item"><strong>Query Language:</strong> {response.query_signals.language.upper()}</div>
+            <div class="audit-item"><strong>Grounding Gate:</strong> {'VERIFIED COMPLIANT' if response.sources else 'REFUSAL ENFORCED'}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        with st.expander("🛠️ Grounding Verification Diagnostics (Audit Log)", expanded=False):
+            c_p1, c_p2 = st.columns(2)
+            with c_p1:
+                st.markdown(f"**Substantive Law Scope:** `{statute_info.get('law_name_en')}` ({statute_info.get('law_number')})")
+                st.markdown(f"**Jurisdiction:** `{statute_info.get('jurisdiction')}`")
+                st.markdown(f"**Statute Partition (law_type):** `{statute_info.get('law_type')}`")
+                st.markdown(f"**Active Advisory Profile:** `{role.value if hasattr(role, 'value') else role}`")
+            with c_p2:
+                st.markdown(f"**Detected Article References:** `{response.query_signals.article_numbers}`")
+                st.markdown(f"**Normalized Ingestion Query:** `{response.query_signals.normalized_query}`")
+                st.markdown(f"**Semantic Distance Floor:** `{settings.semantic_cache_distance_threshold}`")
+                st.markdown(f"**Grounding Gate Evaluation:** `{'PASSED - Statutorily Grounded' if response.sources else 'REFUSED - Scope or Relevance Boundary'}`")
+
+
+# --- SESSION STATE & STATUTE SWITCH NOTIFICATION ---
+if "messages" not in st.session_state:
+    st.session_state["messages"] = []
+
+if "active_statute_id" not in st.session_state:
+    st.session_state["active_statute_id"] = active_statute["id"]
+elif st.session_state["active_statute_id"] != active_statute["id"]:
+    st.session_state["active_statute_id"] = active_statute["id"]
+    if st.session_state["messages"]:
+        st.session_state["messages"].append({
+            "role": "system",
+            "content": f"Switched active statute to **{active_statute['law_name_en']} ({active_statute['law_number']})**. Subsequent inquiries will be grounded in this statute."
+        })
+
+
+# --- MAIN INTERFACE: LEGAL MASTHEAD ---
+st.markdown(f"""
+<div class="masthead-container">
+    <div class="masthead-brand">
+        JURIS-EGYPT <span>·</span> CONVERSATIONAL STATUTORY INTELLIGENCE
+    </div>
+    <div class="masthead-subtitle">
+        Bilingual Legal Research & Multi-Turn Advisory Platform · {active_statute['law_name_en']} ({active_statute['law_number']})
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+
+# --- STATUTORY REFERENCE DOCKET PRESETS ---
+with st.expander(f"📌 Statutory Reference Docket Quick Actions — {active_statute['law_name_en']}", expanded=len(st.session_state["messages"]) == 0):
+    st.caption("Click any curated docket case to launch it immediately into the conversation:")
+    col_d1, col_d2, col_d3, col_d4, col_d5, col_d6 = st.columns(6)
+
+    if active_statute["id"] == "arbitration":
+        if col_d1.button("Art. 1 (Scope)", use_container_width=True):
+            st.session_state["pending_prompt"] = "ما هو نطاق سريان قانون التحكيم المصري رقم 27 لسنة 1994 وفقاً للمادة 1؟"
+            st.rerun()
+        if col_d2.button("المادة ١٠ (Indic)", use_container_width=True):
+            st.session_state["pending_prompt"] = "ما هي الشروط الشكلية والموضوعية لصحة اتفاق التحكيم وفقاً للمادة ١٠ من قانون التحكيم؟"
+            st.rerun()
+        if col_d3.button("Art. 22 (Competence)", use_container_width=True):
+            st.session_state["pending_prompt"] = "ما هي سلطة هيئة التحكيم في الفصل في اختصاصها ومبدأ استقلال شرط التحكيم وفقاً للمادة 22؟"
+            st.rerun()
+        if col_d4.button("Art. 39 (Governing Law)", use_container_width=True):
+            st.session_state["pending_prompt"] = "ما هو القانون الواجب التطبيق على موضوع النزاع في التحكيم وفقاً للمادة 39؟"
+            st.rerun()
+        if col_d5.button("Art. 53 (Nullity)", use_container_width=True):
+            st.session_state["pending_prompt"] = "ما هي حالات وإجراءات رفع دعوى بطلان حكم التحكيم وفقاً للمادة 53 من قانون التحكيم؟"
+            st.rerun()
+        if col_d6.button("Penal (Out of Scope)", use_container_width=True):
+            st.session_state["pending_prompt"] = "ما هي عقوبة السرقة بالإكراه في القانون المصري؟"
+            st.rerun()
+    else:
+        if col_d1.button("Art. 147 (Western)", use_container_width=True):
+            st.session_state["pending_prompt"] = "ما هي أحكام المادة 147 من القانون المدني المصري ونظرية الظروف الطارئة؟"
+            st.rerun()
+        if col_d2.button("المادة ١٤٧ (Indic)", use_container_width=True):
+            st.session_state["pending_prompt"] = "ما هي أحكام المادة ١٤٧ من القانون المدني المصري ونظرية الظروف الطارئة؟"
+            st.rerun()
+        if col_d3.button("Art. 157 (Breach)", use_container_width=True):
+            st.session_state["pending_prompt"] = "ما هي أحكام المادة 157 من القانون المدني المصري وحالات فسخ العقد والتعويض عند الإخلال بالالتزام؟"
+            st.rerun()
+        if col_d4.button("Art. 148 (Good Faith)", use_container_width=True):
+            st.session_state["pending_prompt"] = "ما هي أحكام المادة 148 من القانون المدني وقواعد تنفيذ العقود وفقاً لمبدأ حسن النية؟"
+            st.rerun()
+        if col_d5.button("Art. 54 (Repealed)", use_container_width=True):
+            st.session_state["pending_prompt"] = "ما هو الوضع القانوني الحالي للمادة 54 من القانون المدني المصري؟"
+            st.rerun()
+        if col_d6.button("Penal (Out of Scope)", use_container_width=True):
+            st.session_state["pending_prompt"] = "ما هي عقوبة القتل العمد مع سبق الإصرار في القانون المصري؟"
+            st.rerun()
+
+
+# --- CONVERSATION THREAD ---
+for msg in st.session_state["messages"]:
+    if msg["role"] == "user":
+        with st.chat_message("user", avatar="👤"):
+            st.markdown(f"**{msg['content']}**")
+    elif msg["role"] == "system":
+        st.info(f"🏛️ {msg['content']}")
+    elif msg["role"] == "assistant":
+        with st.chat_message("assistant", avatar="⚖️"):
+            render_assistant_dossier(msg, active_statute)
+
+
+# --- CHAT INPUT & STREAMING GENERATION ---
+chat_input = st.chat_input(f"Enter legal inquiry or follow-up question for {active_statute['law_name_en']} in Arabic or English...")
+active_query = chat_input or st.session_state.pop("pending_prompt", None)
+
+if active_query and active_query.strip():
+    user_prompt = active_query.strip()
+    
+    # Append user message
+    st.session_state["messages"].append({"role": "user", "content": user_prompt})
+    with st.chat_message("user", avatar="👤"):
+        st.markdown(f"**{user_prompt}**")
+
+    # Build assistant message with real-time streaming
+    with st.chat_message("assistant", avatar="⚖️"):
+        rag_service.llm_client = custom_llm_client
+        prior_history = [
+            {"role": m["role"], "content": m["content"]}
+            for m in st.session_state["messages"][:-1]
+            if m["role"] in ["user", "assistant"]
+        ]
+
+        with st.spinner("Analyzing statutory authorities and verifying grounding..."):
+            if hasattr(rag_service, "ask_stream"):
+                resp_meta, stream_gen, finalize_fn = rag_service.ask_stream(
+                    question=user_prompt,
+                    role=user_role,
+                    jurisdiction=active_statute.get("jurisdiction", "Egypt"),
+                    law_type=active_statute.get("law_type", "civil"),
+                    history=prior_history
+                )
+                full_answer = st.write_stream(stream_gen)
+                final_response = finalize_fn(full_answer)
+            else:
+                final_response = rag_service.ask(
+                    question=user_prompt,
+                    role=user_role,
+                    jurisdiction=active_statute.get("jurisdiction", "Egypt"),
+                    law_type=active_statute.get("law_type", "civil"),
+                    history=prior_history
+                )
+                full_answer = final_response.answer
+                st.markdown(full_answer)
+
+        st.session_state["messages"].append({
+            "role": "assistant",
+            "content": full_answer,
+            "response": final_response,
+            "role_persona": user_role
+        })
+
+    st.rerun()
+
 
 

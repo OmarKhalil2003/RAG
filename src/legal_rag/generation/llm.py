@@ -1,11 +1,15 @@
 import re
-from typing import Protocol
+from typing import Protocol, Iterator
 from legal_rag.config import settings
 
 
 class LLMClient(Protocol):
     def generate(self, *, system_prompt: str, user_prompt: str) -> str:
         """Generate response from system and user prompt."""
+        ...
+
+    def generate_stream(self, *, system_prompt: str, user_prompt: str) -> Iterator[str]:
+        """Stream response tokens from system and user prompt."""
         ...
 
 
@@ -35,6 +39,25 @@ class OpenAILLMClient:
             max_tokens=1024
         )
         return response.choices[0].message.content or ""
+
+    def generate_stream(self, *, system_prompt: str, user_prompt: str) -> Iterator[str]:
+        if not self.client:
+            raise ValueError("OpenAI client not configured or OPENAI_API_KEY missing.")
+
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            temperature=0.0,
+            max_tokens=1024,
+            stream=True
+        )
+        for chunk in response:
+            delta = chunk.choices[0].delta.content if chunk.choices else ""
+            if delta:
+                yield delta
 
 
 class MockLLMClient:
@@ -143,6 +166,12 @@ class MockLLMClient:
                 f"(Legal basis: Egyptian Civil Code, Articles {cited_str})."
             )
 
+    def generate_stream(self, *, system_prompt: str, user_prompt: str) -> Iterator[str]:
+        full_text = self.generate(system_prompt=system_prompt, user_prompt=user_prompt)
+        words = full_text.split(" ")
+        for i, word in enumerate(words):
+            yield word + (" " if i < len(words) - 1 else "")
+
 
 _UNSET = object()
 
@@ -213,6 +242,61 @@ class GeminiLLMClient:
         if last_error:
             raise last_error
         return ""
+
+    def generate_stream(self, *, system_prompt: str, user_prompt: str) -> Iterator[str]:
+        if not self.api_key:
+            raise ValueError(
+                "Gemini API key is not configured. Please set GEMINI_API_KEY in your .env file "
+                "or enter it directly in the Streamlit sidebar."
+            )
+        import google.generativeai as genai
+
+        preferred = (self.model_name or "gemini-3.1-flash-lite").strip()
+        candidates = [preferred]
+        for c in [
+            "gemini-3.1-flash-lite",
+            "gemini-3-flash-preview",
+            "gemini-3.5-flash-lite",
+            "gemini-flash-latest",
+            "gemini-flash-lite-latest",
+            "gemini-3.5-flash"
+        ]:
+            if c not in candidates:
+                candidates.append(c)
+
+        last_error = None
+        for candidate in candidates:
+            try:
+                clean_name = candidate.replace("models/", "")
+                model = genai.GenerativeModel(
+                    model_name=clean_name,
+                    system_instruction=system_prompt
+                )
+                response = model.generate_content(
+                    user_prompt,
+                    generation_config=genai.types.GenerationConfig(
+                        temperature=0.0,
+                        max_output_tokens=1024
+                    ),
+                    stream=True
+                )
+                yielded_any = False
+                for chunk in response:
+                    if chunk and chunk.text:
+                        yielded_any = True
+                        yield chunk.text
+                if yielded_any:
+                    self.model_name = clean_name
+                    return
+            except Exception as e:
+                last_error = e
+                err_msg = str(e).lower()
+                if any(x in err_msg for x in ["not found", "no longer available", "unsupported", "404", "resourceexhausted", "quota"]):
+                    continue
+                raise e
+
+        if last_error:
+            raise last_error
 
 
 def get_llm_client(provider: str | None = None, api_key: str | None = None, model: str | None = None) -> LLMClient:

@@ -28,12 +28,20 @@ class QueryParser:
     Supports single article references and explicit article range queries (e.g. 279 to 302).
     """
 
+    def __init__(self):
+        self._cache: dict[tuple, QuerySignals] = {}
+        self._max_cache = 1024
+
     def parse(
         self,
         query: str,
         jurisdiction: str | None = None,
         law_type: str | None = None
     ) -> QuerySignals:
+        cache_key = (query, jurisdiction, law_type)
+        if cache_key in self._cache:
+            return self._cache[cache_key]
+
         query_clean = query.strip()
         
         # 1. Detect language
@@ -45,7 +53,7 @@ class QueryParser:
         # 3. Normalize query text for embedding and search
         normalized_query = normalize_arabic_text(query_clean)
         
-        return QuerySignals(
+        signals = QuerySignals(
             original_query=query_clean,
             normalized_query=normalized_query.strip(),
             language=language,
@@ -53,6 +61,12 @@ class QueryParser:
             jurisdiction=jurisdiction,
             law_type=law_type
         )
+        if len(self._cache) >= self._max_cache:
+            keys_to_remove = list(self._cache.keys())[:200]
+            for k in keys_to_remove:
+                self._cache.pop(k, None)
+        self._cache[cache_key] = signals
+        return signals
 
     @staticmethod
     def detect_language(text: str) -> str:

@@ -76,18 +76,34 @@ def construct_prompt(
     question: str,
     candidates: list[RetrievalResult],
     role: UserRole = UserRole.LAWYER,
-    language: str = "ar"
+    language: str = "ar",
+    history: list[dict] | None = None
 ) -> tuple[str, str]:
     """
-    Constructs (system_prompt, user_prompt) adhering to the strict legal grounding constitution.
+    Constructs (system_prompt, user_prompt) adhering to the strict legal grounding constitution,
+    optionally incorporating prior conversational context.
     """
     system_prompt = BASE_LEGAL_SYSTEM_PROMPT + "\n" + ROLE_INSTRUCTIONS.get(role, ROLE_INSTRUCTIONS[UserRole.LAWYER])
     context_str = build_context_block(candidates, language=language)
 
-    user_prompt = f"""RETRIEVED LEGAL CONTEXT:
+    history_str = ""
+    if history:
+        # Keep last 4 messages to avoid context overflow while maintaining conversational cohesion
+        recent_history = history[-4:]
+        formatted_turns = []
+        for h in recent_history:
+            role_prefix = "User Inquiry" if h.get("role") == "user" else "Legal Assistant"
+            content = h.get("content", "").strip()
+            if len(content) > 350:
+                content = content[:350] + "..."
+            formatted_turns.append(f"{role_prefix}: {content}")
+        if formatted_turns:
+            history_str = "PRIOR CONSULTATION CONTEXT:\n" + "\n".join(formatted_turns) + "\n\n"
+
+    user_prompt = f"""{history_str}RETRIEVED LEGAL CONTEXT:
 {context_str}
 
-USER QUESTION:
+CURRENT USER QUESTION:
 {question}
 
 Please provide your grounded response strictly following your role instructions and citing the relevant articles:"""

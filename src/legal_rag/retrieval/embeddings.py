@@ -13,6 +13,8 @@ class BGEM3Embedder:
     def __init__(self, model_name: str = "BAAI/bge-m3"):
         self.model_name = model_name
         self.model: SentenceTransformer | None = None
+        self._query_cache: dict[str, list[float]] = {}
+        self._max_cache_size = 1024
 
     def _get_model(self) -> SentenceTransformer:
         if self.model is None:
@@ -34,7 +36,16 @@ class BGEM3Embedder:
         return [vec.tolist() for vec in embeddings]
 
     def encode_query(self, query: str) -> list[float]:
-        """Encode a single query string into a normalized dense vector."""
+        """Encode a single query string into a normalized dense vector (cached)."""
+        cached = self._query_cache.get(query)
+        if cached is not None:
+            return cached
+
         model = self._get_model()
-        vec = model.encode(query, normalize_embeddings=True, show_progress_bar=False)
-        return vec.tolist()
+        vec = model.encode(query, normalize_embeddings=True, show_progress_bar=False).tolist()
+        if len(self._query_cache) >= self._max_cache_size:
+            keys_to_remove = list(self._query_cache.keys())[:200]
+            for k in keys_to_remove:
+                self._query_cache.pop(k, None)
+        self._query_cache[query] = vec
+        return vec

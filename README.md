@@ -2,7 +2,7 @@
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests: 29 Passed](https://img.shields.io/badge/tests-29%20passed-brightgreen.svg)]()
+[![Tests: 32 Passed](https://img.shields.io/badge/tests-32%20passed-brightgreen.svg)]()
 [![Evaluation: 25/25 Passed](https://img.shields.io/badge/eval-25%2F25%20passed%20(100%25)-brightgreen.svg)]()
 [![RAGAS: 93.7% Faithfulness | 98.1% Precision](https://img.shields.io/badge/RAGAS-93.7%25%20Faithfulness%20%7C%2098.1%25%20Precision-blue.svg)]()
 [![Retrieval: Hybrid RRF](https://img.shields.io/badge/retrieval-BGE--M3%20%2B%20BM25%20%2B%20Exact-orange.svg)]()
@@ -152,7 +152,6 @@ Integrated **RAGAS (Retrieval Augmented Generation Assessment)** evaluation pipe
   - **Answer Relevancy**: Assesses how directly and pertinently the response addresses the user's specific statutory query.
   - **Context Precision**: Measures whether the authoritative statutory articles are prioritized at top ranks in the retrieval results.
   - **Context Recall**: Verifies that all mandatory statutory provisions needed to answer the inquiry were retrieved.
-- **Interactive UI Auditing**: Streamlit UI includes a dedicated benchmark viewer expander and on-demand RAGAS audit button.
 
 ---
 
@@ -302,7 +301,7 @@ python evaluation/run_ragas_eval.py --sample 5 --offline
 ```bash
 python -m pytest tests/ -v
 ```
-*29/29 Unit Tests passing (including RAGAS adapter, dataset formatting, and evaluator test suite).*
+*32/32 Unit Tests passing (including multi-turn chat pipeline, streaming token generation, RAGAS adapter, and full statutory suites).*
 
 ### Clear Cache
 To flush the Redis/in-memory semantic cache, `__pycache__`, and test caches:
@@ -317,13 +316,13 @@ python scripts/clear_cache.py
 ```text
 legal-rag/
 ├── app/
-│   └── streamlit_app.py           # Streamlit UI with statute dropdown, role selector, RAGAS audit metrics
+│   └── streamlit_app.py           # Conversational Chat UI with streaming tokens, statute switcher & citations
 ├── src/
 │   └── legal_rag/
 │       ├── __init__.py
 │       ├── config.py              # Pydantic application settings (gemini-3.1-flash-lite default)
 │       ├── models.py              # Domain contracts (LegalArticle, RAGResponse, etc.)
-│       ├── pipeline.py            # RAGService orchestrator with multi-statute support
+│       ├── pipeline.py            # RAGService orchestrator with streaming & conversational context
 │       ├── ingestion/
 │       │   ├── __init__.py
 │       │   ├── normalizer.py      # Arabic normalization & OCR ligature repair engine
@@ -331,17 +330,17 @@ legal-rag/
 │       │   └── validator.py       # Article range & integrity validator
 │       ├── retrieval/
 │       │   ├── __init__.py
-│       │   ├── query_parser.py    # Language & deterministic article extractor (Western & Indic)
-│       │   ├── embeddings.py      # BGE-M3 dense embedding model wrapper
+│       │   ├── query_parser.py    # Language & deterministic article extractor (Western & Indic, cached)
+│       │   ├── embeddings.py      # BGE-M3 dense embedding model wrapper (LRU cached)
 │       │   ├── qdrant.py          # Versioned Qdrant store adapter with namespaced UUIDs & memory replica
 │       │   ├── sparse.py          # BM25Plus sparse lexical retriever
 │       │   ├── hybrid.py          # RRF fusion & exact priority injection
-│       │   └── reranker.py        # Cross-encoder reranker adapter
+│       │   └── reranker.py        # Dynamic candidate pool cross-encoder reranker
 │       ├── generation/
 │       │   ├── __init__.py
 │       │   ├── grounding_gate.py  # Hard pre-LLM validation gate (multi-statute bounds)
-│       │   ├── prompts.py         # Grounding prompt & 4 role personas
-│       │   └── llm.py             # Gemini (with cascade fallback), OpenAI, & Mock LLM clients
+│       │   ├── prompts.py         # Grounding prompt & multi-turn consultation history
+│       │   └── llm.py             # Gemini, OpenAI, & Mock LLM clients with real-time streaming
 │       ├── cache/
 │       │   ├── __init__.py
 │       │   └── semantic_cache.py  # Redis semantic cache with cross-statute namespace isolation
@@ -373,7 +372,7 @@ legal-rag/
 │   ├── eval_report.json           # Serialized evaluation report
 │   ├── ragas_report.json          # Serialized RAGAS benchmark results
 │   └── ragas_summary.md           # Formatted RAGAS scorecard summary
-├── tests/                         # Full unit test suite (29 tests including test_ragas.py)
+├── tests/                         # Full unit test suite (32 tests including test_chat_pipeline.py)
 ├── docker-compose.yml             # Docker services for Qdrant & Redis
 ├── Dockerfile                     # Containerized application build
 ├── pyproject.toml                 # Package configuration & dependencies (TOML)
