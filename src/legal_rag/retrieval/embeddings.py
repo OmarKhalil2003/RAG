@@ -21,18 +21,20 @@ class BGEM3Embedder:
             import torch
             torch.set_num_threads(os.cpu_count() or 4)
             self.model = SentenceTransformer(self.model_name)
-            self.model.max_seq_length = 128
+            self.model.max_seq_length = 64
         return self.model
 
     def encode(self, texts: list[str], batch_size: int = 16, show_progress_bar: bool = True) -> list[list[float]]:
         """Encode a list of texts into normalized dense vectors."""
+        import torch
         model = self._get_model()
-        embeddings = model.encode(
-            texts,
-            batch_size=batch_size,
-            normalize_embeddings=True,
-            show_progress_bar=show_progress_bar
-        )
+        with torch.inference_mode():
+            embeddings = model.encode(
+                texts,
+                batch_size=batch_size,
+                normalize_embeddings=True,
+                show_progress_bar=show_progress_bar
+            )
         return [vec.tolist() for vec in embeddings]
 
     def encode_query(self, query: str) -> list[float]:
@@ -41,8 +43,10 @@ class BGEM3Embedder:
         if cached is not None:
             return cached
 
+        import torch
         model = self._get_model()
-        vec = model.encode(query, normalize_embeddings=True, show_progress_bar=False).tolist()
+        with torch.inference_mode():
+            vec = model.encode(query, normalize_embeddings=True, show_progress_bar=False).tolist()
         if len(self._query_cache) >= self._max_cache_size:
             keys_to_remove = list(self._query_cache.keys())[:200]
             for k in keys_to_remove:

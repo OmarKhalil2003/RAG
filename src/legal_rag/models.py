@@ -91,3 +91,4 @@ class RAGResponse(BaseModel):
     retrieval_count: int = 0
     query_signals: QuerySignals
     latency_ms: float = 0.0
+    retrieval_latency_ms: float = 0.0

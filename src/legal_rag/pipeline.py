@@ -260,7 +260,8 @@ class RAGService:
             cached=False,
             retrieval_count=len(citations),
             query_signals=signals,
-            latency_ms=retrieval_latency_ms
+            latency_ms=retrieval_latency_ms,
+            retrieval_latency_ms=retrieval_latency_ms
         )
 
         def stream_tokens() -> Iterator[str]:
@@ -280,6 +281,7 @@ class RAGService:
             total_latency = (time.perf_counter() - start_time) * 1000.0
             prepared_resp.answer = full_answer
             prepared_resp.latency_ms = total_latency
+            prepared_resp.retrieval_latency_ms = retrieval_latency_ms
 
             # Cache completed response
             self.cache.store(

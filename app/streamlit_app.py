@@ -439,23 +439,22 @@ with st.sidebar:
     custom_llm_client = None
     if "Gemini" in selected_provider_label:
         gemini_model_options = [
-            "gemini-2.5-flash",
             "gemini-2.0-flash",
+            "gemini-2.5-flash",
             "gemini-1.5-flash",
             "gemini-flash-latest",
             "gemini-2.5-pro",
             "gemini-1.5-pro",
-            "gemini-3-flash-preview",
             "Custom Model Name..."
         ]
         selected_choice = st.selectbox(
             "Gemini Model Edition:",
             gemini_model_options,
             index=0,
-            help="gemini-2.5-flash and gemini-2.0-flash offer the fastest speed, highest reliability, and maximum quota availability."
+            help="gemini-2.0-flash delivers ultra-fast sub-second token generation and maximum availability."
         )
         if selected_choice == "Custom Model Name...":
-            selected_model = st.text_input("Enter Model Identifier:", value="gemini-2.5-flash")
+            selected_model = st.text_input("Enter Model Identifier:", value="gemini-2.0-flash")
         else:
             selected_model = selected_choice
         
@@ -593,10 +592,12 @@ def render_assistant_dossier(msg_data: dict, statute_info: dict):
     # Telemetry Strip
     if response:
         cache_badge = '<span class="status-cached">⚡ SEMANTIC CACHE HIT</span>' if response.cached else '<span class="status-active">● RETRIEVED FROM CORPUS</span>'
+        ret_lat = getattr(response, 'retrieval_latency_ms', response.latency_ms)
         st.markdown(f"""
         <div class="audit-strip">
             <div class="audit-item"><strong>Audit Status:</strong> {cache_badge}</div>
-            <div class="audit-item"><strong>Execution Latency:</strong> {response.latency_ms:.1f} ms</div>
+            <div class="audit-item"><strong>Retrieval Time:</strong> {ret_lat:.1f} ms</div>
+            <div class="audit-item"><strong>Total Roundtrip:</strong> {response.latency_ms:.1f} ms</div>
             <div class="audit-item"><strong>Authorities Cited:</strong> {response.retrieval_count} Provisions</div>
             <div class="audit-item"><strong>Query Language:</strong> {response.query_signals.language.upper()}</div>
             <div class="audit-item"><strong>Grounding Gate:</strong> {'VERIFIED COMPLIANT' if response.sources else 'REFUSAL ENFORCED'}</div>

@@ -20,7 +20,7 @@ class LegalReranker:
             try:
                 import torch
                 torch.set_num_threads(os.cpu_count() or 4)
-                self.model = CrossEncoder(self.model_name, max_length=128)
+                self.model = CrossEncoder(self.model_name, max_length=96)
             except Exception as e:
                 print(f"[LegalReranker] Could not load CrossEncoder {self.model_name}: {e}. Using score-based fallback.")
                 self._load_failed = True
@@ -42,15 +42,17 @@ class LegalReranker:
 
         model = self._get_model()
         if model is not None and other_candidates:
-            # Dynamic reranker pool: If exact matches are already secured at rank 1,
-            # rerank only top 3 non-exact candidates. Otherwise rerank top 5 to minimize CPU latency.
-            pool_size = 3 if exact_matches else 5
+            # Dynamic reranker pool: If exact match exists, score at most 2 candidates;
+            # otherwise score 3 candidates to ensure sub-second CPU response.
+            pool_size = 2 if exact_matches else 3
             rerank_pool = other_candidates[:pool_size]
             pairs = [
-                (query, f"المادة {c.article_number} (Article {c.article_number})\n{c.text_ar[:200]}\n{c.text_en[:200]}")
+                (query, f"المادة {c.article_number} (Article {c.article_number})\n{c.text_ar[:160]}\n{c.text_en[:160]}")
                 for c in rerank_pool
             ]
-            scores = model.predict(pairs, batch_size=pool_size, show_progress_bar=False)
+            import torch
+            with torch.inference_mode():
+                scores = model.predict(pairs, batch_size=pool_size, show_progress_bar=False)
 
             scored_candidates = []
             for c, s in zip(rerank_pool, scores):

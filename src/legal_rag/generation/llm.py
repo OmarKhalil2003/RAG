@@ -199,16 +199,15 @@ class GeminiLLMClient:
         import google.generativeai as genai
         
         # Build candidate fallback sequence starting with preferred model
-        preferred = (self.model_name or "gemini-2.5-flash").strip()
+        preferred = (self.model_name or "gemini-2.0-flash").strip()
         candidates = [preferred]
         for c in [
-            "gemini-2.5-flash",
             "gemini-2.0-flash",
+            "gemini-2.5-flash",
             "gemini-1.5-flash",
             "gemini-flash-latest",
             "gemini-2.5-pro",
-            "gemini-1.5-pro",
-            "gemini-3-flash-preview"
+            "gemini-1.5-pro"
         ]:
             if c not in candidates:
                 candidates.append(c)
@@ -233,7 +232,8 @@ class GeminiLLMClient:
                     generation_config=genai.types.GenerationConfig(
                         temperature=0.0,
                         max_output_tokens=1024
-                    )
+                    ),
+                    request_options={"timeout": 15.0}
                 )
                 if response and response.text:
                     self.model_name = clean_name
@@ -259,16 +259,15 @@ class GeminiLLMClient:
             )
         import google.generativeai as genai
 
-        preferred = (self.model_name or "gemini-2.5-flash").strip()
+        preferred = (self.model_name or "gemini-2.0-flash").strip()
         candidates = [preferred]
         for c in [
-            "gemini-2.5-flash",
             "gemini-2.0-flash",
+            "gemini-2.5-flash",
             "gemini-1.5-flash",
             "gemini-flash-latest",
             "gemini-2.5-pro",
-            "gemini-1.5-pro",
-            "gemini-3-flash-preview"
+            "gemini-1.5-pro"
         ]:
             if c not in candidates:
                 candidates.append(c)
@@ -295,6 +294,7 @@ class GeminiLLMClient:
                         temperature=0.0,
                         max_output_tokens=1024
                     ),
+                    request_options={"timeout": 15.0},
                     stream=True
                 )
                 for chunk in response:
