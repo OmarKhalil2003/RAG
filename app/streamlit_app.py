@@ -216,7 +216,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-@st.cache_resource
+@st.cache_resource(show_spinner="Preloading and warming up neural retrieval engines...")
 def get_rag_service():
     import sys
     import importlib
@@ -228,7 +228,13 @@ def get_rag_service():
                 pass
     import legal_rag.pipeline
     importlib.reload(legal_rag.pipeline)
-    return legal_rag.pipeline.RAGService()
+    svc = legal_rag.pipeline.RAGService()
+    try:
+        svc.embedder._get_model()
+        svc.reranker._get_model()
+    except Exception as e:
+        logging.warning(f"Model pre-warm notice: {e}")
+    return svc
 
 
 @st.cache_data
