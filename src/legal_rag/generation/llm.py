@@ -36,7 +36,7 @@ class OpenAILLMClient:
                 {"role": "user", "content": user_prompt}
             ],
             temperature=0.0,
-            max_tokens=1024
+            max_tokens=4096
         )
         return response.choices[0].message.content or ""
 
@@ -51,7 +51,7 @@ class OpenAILLMClient:
                 {"role": "user", "content": user_prompt}
             ],
             temperature=0.0,
-            max_tokens=1024,
+            max_tokens=4096,
             stream=True
         )
         for chunk in response:
@@ -231,9 +231,8 @@ class GeminiLLMClient:
                     user_prompt,
                     generation_config=genai.types.GenerationConfig(
                         temperature=0.0,
-                        max_output_tokens=1024
-                    ),
-                    request_options={"timeout": 15.0}
+                        max_output_tokens=4096
+                    )
                 )
                 if response and response.text:
                     self.model_name = clean_name
@@ -292,9 +291,8 @@ class GeminiLLMClient:
                     user_prompt,
                     generation_config=genai.types.GenerationConfig(
                         temperature=0.0,
-                        max_output_tokens=1024
+                        max_output_tokens=4096
                     ),
-                    request_options={"timeout": 15.0},
                     stream=True
                 )
                 for chunk in response:
@@ -306,8 +304,9 @@ class GeminiLLMClient:
                     return
             except Exception as e:
                 last_error = e
-                # If we already yielded tokens before failure, do not re-run another candidate to prevent duplicate answers
+                # If we already yielded tokens before failure, inform user rather than silent cutoff
                 if yielded_any:
+                    yield f"\n\n*(تنبيه: انقطع بث الإجابة بسبب انقطاع في الاتصال: {e})*"
                     return
                 err_msg = str(e).lower()
                 if any(x in err_msg for x in recoverable_keywords):
