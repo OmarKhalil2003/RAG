@@ -1,0 +1,414 @@
+{
+  "timestamp": "2026-09-06T15:48:22Z",
+  "provider": "deterministic_offline",
+  "total_cases": 35,
+  "aggregate_scores": {
+    "faithfulness": 0.9369,
+    "answer_relevancy": 0.6918,
+    "context_precision": 0.981,
+    "context_recall": 0.9429
+  },
+  "statute_breakdown": {
+    "civil": {
+      "count": 25,
+      "faithfulness": 0.9117,
+      "answer_relevancy": 0.6648,
+      "context_precision": 0.9733,
+      "context_recall": 0.92
+    },
+    "arbitration": {
+      "count": 10,
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.7594,
+      "context_precision": 1.0,
+      "context_recall": 1.0
+    }
+  },
+  "per_case_results": [
+    {
+      "id": "exact_147_ar",
+      "question": "ما هي أحكام المادة 147 من القانون المدني؟",
+      "law_type": "civil",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.6802,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "exact_147_indic",
+      "question": "ماذا تنص المادة ١٤٧؟",
+      "law_type": "civil",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.5207,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "exact_157_ar",
+      "question": "ما هو نص المادة 157؟",
+      "law_type": "civil",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.6068,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "exact_157_indic",
+      "question": "ما هي شروط المادة ١٥٧؟",
+      "law_type": "civil",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.5936,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "exact_147_en",
+      "question": "What does Article 147 of the Egyptian Civil Code provide?",
+      "law_type": "civil",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.5814,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "exact_157_en",
+      "question": "What are the provisions of Article 157?",
+      "law_type": "civil",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.5906,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "semantic_contract_effects_ar",
+      "question": "ما هي آثار العقد بالنسبة للمتعاقدين ونظرية الظروف الطارئة؟",
+      "law_type": "civil",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.8147,
+        "context_precision": 0.3333,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "semantic_contract_effects_en",
+      "question": "What are the effects of a contract between parties and unpredictable onerous events?",
+      "law_type": "civil",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.632,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "semantic_rescission_ar",
+      "question": "ما هي أحكام وإجراءات فسخ العقد إذا امتنع أحد الطرفين عن الوفاء بالتزامه؟",
+      "law_type": "civil",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.803,
+        "context_precision": 1.0,
+        "context_recall": 0.5
+      }
+    },
+    {
+      "id": "semantic_rescission_en",
+      "question": "What remedies are available if one party does not perform their obligations in a bilateral contract?",
+      "law_type": "civil",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.7783,
+        "context_precision": 1.0,
+        "context_recall": 0.5
+      }
+    },
+    {
+      "id": "repealed_54_ar",
+      "question": "ما هو الوضع القانوني للمادة 54؟",
+      "law_type": "civil",
+      "scores": {
+        "faithfulness": 0.75,
+        "answer_relevancy": 0.6315,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "repealed_54_en",
+      "question": "What does Article 54 say regarding legal associations?",
+      "law_type": "civil",
+      "scores": {
+        "faithfulness": 0.75,
+        "answer_relevancy": 0.5303,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "repealed_389_ar",
+      "question": "ما حكم المادة 389 من القانون المدني؟",
+      "law_type": "civil",
+      "scores": {
+        "faithfulness": 0.7926,
+        "answer_relevancy": 0.6373,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "out_of_scope_murder_ar",
+      "question": "ما هي عقوبة القتل العمد مع سبق الإصرار في القانون المصري؟",
+      "law_type": "civil",
+      "scores": {
+        "faithfulness": 0.5,
+        "answer_relevancy": 0.5691,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "out_of_scope_theft_en",
+      "question": "What is the criminal penalty for aggravated theft in Egypt?",
+      "law_type": "civil",
+      "scores": {
+        "faithfulness": 0.5,
+        "answer_relevancy": 0.5939,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "out_of_scope_saudi_ar",
+      "question": "ما هي أحكام فسخ العقد في نظام المعاملات المدنية السعودي؟",
+      "law_type": "civil",
+      "scores": {
+        "faithfulness": 0.5,
+        "answer_relevancy": 0.4817,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "exact_1_ar",
+      "question": "ماذا تنص المادة 1 بخصوص مصادر القانون وسريان النصوص التشريعية؟",
+      "law_type": "civil",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.7153,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "exact_1_en",
+      "question": "What are the rules of statutory interpretation under Article 1?",
+      "law_type": "civil",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.6331,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "semantic_good_faith_ar",
+      "question": "ما هي قواعد تنفيذ العقود طبقا لمبدأ حسن النية؟",
+      "law_type": "civil",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.8076,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "semantic_good_faith_en",
+      "question": "How must contracts be performed according to good faith requirements?",
+      "law_type": "civil",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.6785,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "cache_pair_1a",
+      "question": "ما هي آثار العقد بالنسبة للمتعاقدين؟",
+      "law_type": "civil",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.7607,
+        "context_precision": 1.0,
+        "context_recall": 0.5
+      }
+    },
+    {
+      "id": "cache_pair_1b",
+      "question": "ما هي آثار العقد بين المتعاقدين في القانون المدني؟",
+      "law_type": "civil",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.7782,
+        "context_precision": 1.0,
+        "context_recall": 0.5
+      }
+    },
+    {
+      "id": "exact_418_ar",
+      "question": "ما هو تعريف عقد البيع وفقاً للمادة 418؟",
+      "law_type": "civil",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.7945,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "exact_418_en",
+      "question": "What is the legal definition of sale under Article 418?",
+      "law_type": "civil",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.7125,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "semantic_sale_definition_ar",
+      "question": "ما هو التزام البائع بنقل الملكية في عقد البيع مقابل ثمن نقدي؟",
+      "law_type": "civil",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.6935,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "arbitration_scope_1",
+      "question": "ما هو نطاق سريان قانون التحكيم المصري رقم 27 لسنة 1994 وفقاً للمادة 1؟",
+      "law_type": "arbitration",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.7346,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "arbitration_agreement_10",
+      "question": "ما هي الشروط الشكلية والموضوعية لصحة اتفاق التحكيم وفقاً للمادة 10 من قانون التحكيم؟",
+      "law_type": "arbitration",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.7541,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "arbitration_agreement_10_indic",
+      "question": "ما هي شروط الكتابة في شرط التحكيم طبقاً للمادة ١٠؟",
+      "law_type": "arbitration",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.7028,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "arbitration_tribunal_15",
+      "question": "ما هي القواعد المتعلقة بعدد المحكمين وتشكيل الهيئة وفقاً للمادة 15؟",
+      "law_type": "arbitration",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.7486,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "arbitration_competence_22",
+      "question": "ما هي سلطة هيئة التحكيم في الفصل في اختصاصها ومبدأ استقلال شرط التحكيم وفقاً للمادة 22؟",
+      "law_type": "arbitration",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.7856,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "arbitration_law_39",
+      "question": "ما هو القانون الواجب التطبيق على موضوع النزاع في التحكيم وفقاً للمادة 39؟",
+      "law_type": "arbitration",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.7317,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "arbitration_award_43",
+      "question": "ما هي الشروط الشكلية والموضوعية لصدور حكم التحكيم وفقاً للمادة 43؟",
+      "law_type": "arbitration",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.7726,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "arbitration_nullity_53",
+      "question": "ما هي حالات وإجراءات رفع دعوى بطلان حكم التحكيم وفقاً للمادة 53 من قانون التحكيم؟",
+      "law_type": "arbitration",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.7884,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "arbitration_nullity_period_54",
+      "question": "ما هو الميعاد القانوني لرفع دعوى بطلان حكم التحكيم وفقاً للمادة 54؟",
+      "law_type": "arbitration",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.7677,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "id": "arbitration_enforcement_58",
+      "question": "ما هي شروط وإجراءات طلب تنفيذ حكم التحكيم في مصر وفقاً للمادة 58؟",
+      "law_type": "arbitration",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.8081,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+openapi: 3.0.3
+info:
+  title: Arabic Legal RAG PoC API Contract
+  version: 0.1.0
+  description: |
+    Logical API contract for the legal RAG application.
+    The initial PoC may call the application service directly from Streamlit;
+    exposing this contract through FastAPI is optional.
+
+paths:
+  /ask:
+    post:
+      summary: Ask a grounded legal question
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AskRequest'
+      responses:
+        '200':
+          description: Grounded answer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AskResponse'
+        '422':
+          description: Invalid request
+        '503':
+          description: Retrieval or generation service unavailable
+
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+components:
+  schemas:
+    AskRequest:
+      type: object
+      required:
+        - question
+        - role
+        - jurisdiction
+        - law_type
+      properties:
+        question:
+          type: string
+          minLength: 1
+        role:
+          type: string
+          enum:
+            - lawyer
+            - citizen
+            - law_student
+            - researcher
+        jurisdiction:
+          type: string
+          example: Egypt
+        law_type:
+          type: string
+          example: civil
+
+    Source:
+      type: object
+      required:
+        - law_name
+        - article_number
+        - citation
+        - is_repealed
+      properties:
+        law_name:
+          type: string
+        article_number:
+          type: integer
+        citation:
+          type: string
+        is_repealed:
+          type: boolean
+
+    AskResponse:
+      type: object
+      required:
+        - answer
+        - sources
+        - cached
+      properties:
+        answer:
+          type: string
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/Source'
+        cached:
+          type: boolean
+
+    HealthResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          example: healthy
+        documents_indexed:
+          type: integer

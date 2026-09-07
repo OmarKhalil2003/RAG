@@ -1,0 +1,16 @@
+{
+  "document_id": "egyptian_civil_code_1948",
+  "jurisdiction": "Egypt",
+  "law_type": "civil",
+  "law_name_ar": "القانون المدني المصري",
+  "law_name_en": "Egyptian Civil Code",
+  "law_year": 1948,
+  "expected_article_range": [1, 1149],
+  "source_pdf": "القانون المدني المصري.pdf",
+  "known_repealed_patterns": [
+    "ألغيت المواد من",
+    "ملغاة",
+    "Articles?\\s+\\d+(?:\\s*-\\s*\\d+)?\\s+repealed",
+    "Articles?\\s+\\d+(?:\\s*-\\s*\\d+)?\\s+have been repealed"
+  ]
+}

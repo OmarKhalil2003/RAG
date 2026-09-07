@@ -1,0 +1,445 @@
+{
+  "metrics": {
+    "total_cases": 25,
+    "exact_article_accuracy": 1.0,
+    "recall_at_1": 0.9545454545454546,
+    "recall_at_3": 1.0,
+    "recall_at_5": 1.0,
+    "mrr": 0.9696969696969696,
+    "refusal_correctness": 1.0,
+    "citation_integrity": 1.0,
+    "scope_isolation": 1.0
+  },
+  "detailed_results": [
+    {
+      "id": "exact_147_ar",
+      "question": "ما هي أحكام المادة 147 من القانون المدني؟",
+      "type": "exact_article",
+      "expected_articles": [
+        147
+      ],
+      "retrieved_articles": [
+        147,
+        214,
+        511,
+        87,
+        173
+      ],
+      "cached": false,
+      "latency_ms": 34789.81550000026,
+      "status": "PASS"
+    },
+    {
+      "id": "exact_147_indic",
+      "question": "ماذا تنص المادة ١٤٧؟",
+      "type": "arabic_indic_numeral",
+      "expected_articles": [
+        147
+      ],
+      "retrieved_articles": [
+        147,
+        173,
+        867,
+        149,
+        444
+      ],
+      "cached": false,
+      "latency_ms": 5532.5262999976985,
+      "status": "PASS"
+    },
+    {
+      "id": "exact_157_ar",
+      "question": "ما هو نص المادة 157؟",
+      "type": "exact_article",
+      "expected_articles": [
+        157
+      ],
+      "retrieved_articles": [
+        157,
+        155,
+        857,
+        150,
+        153
+      ],
+      "cached": false,
+      "latency_ms": 6360.5205999920145,
+      "status": "PASS"
+    },
+    {
+      "id": "exact_157_indic",
+      "question": "ما هي شروط المادة ١٥٧؟",
+      "type": "arabic_indic_numeral",
+      "expected_articles": [
+        157
+      ],
+      "retrieved_articles": [
+        157,
+        155,
+        154,
+        763,
+        153
+      ],
+      "cached": false,
+      "latency_ms": 5948.608699982287,
+      "status": "PASS"
+    },
+    {
+      "id": "exact_147_en",
+      "question": "What does Article 147 of the Egyptian Civil Code provide?",
+      "type": "exact_article",
+      "expected_articles": [
+        147
+      ],
+      "retrieved_articles": [
+        147,
+        792,
+        489,
+        307,
+        547
+      ],
+      "cached": false,
+      "latency_ms": 6460.779800021555,
+      "status": "PASS"
+    },
+    {
+      "id": "exact_157_en",
+      "question": "What are the provisions of Article 157?",
+      "type": "exact_article",
+      "expected_articles": [
+        157
+      ],
+      "retrieved_articles": [
+        157,
+        155,
+        857,
+        150,
+        153
+      ],
+      "cached": true,
+      "latency_ms": 126.04950001696125,
+      "status": "PASS"
+    },
+    {
+      "id": "semantic_contract_effects_ar",
+      "question": "ما هي آثار العقد بالنسبة للمتعاقدين ونظرية الظروف الطارئة؟",
+      "type": "semantic_ar",
+      "expected_articles": [
+        147
+      ],
+      "retrieved_articles": [
+        145,
+        144,
+        147,
+        107,
+        157
+      ],
+      "cached": false,
+      "latency_ms": 8541.024700010894,
+      "status": "PASS"
+    },
+    {
+      "id": "semantic_contract_effects_en",
+      "question": "What are the effects of a contract between parties and unpredictable onerous events?",
+      "type": "semantic_en",
+      "expected_articles": [
+        147
+      ],
+      "retrieved_articles": [
+        147,
+        145,
+        1098,
+        217,
+        107
+      ],
+      "cached": false,
+      "latency_ms": 8772.206499997992,
+      "status": "PASS"
+    },
+    {
+      "id": "semantic_rescission_ar",
+      "question": "ما هي أحكام وإجراءات فسخ العقد إذا امتنع أحد الطرفين عن الوفاء بالتزامه؟",
+      "type": "semantic_ar",
+      "expected_articles": [
+        157,
+        158
+      ],
+      "retrieved_articles": [
+        157,
+        746,
+        159,
+        161,
+        695
+      ],
+      "cached": false,
+      "latency_ms": 9909.282100008568,
+      "status": "PASS"
+    },
+    {
+      "id": "semantic_rescission_en",
+      "question": "What remedies are available if one party does not perform their obligations in a bilateral contract?",
+      "type": "semantic_en",
+      "expected_articles": [
+        157,
+        158
+      ],
+      "retrieved_articles": [
+        157,
+        161,
+        159,
+        153,
+        215
+      ],
+      "cached": false,
+      "latency_ms": 11714.78130001924,
+      "status": "PASS"
+    },
+    {
+      "id": "repealed_54_ar",
+      "question": "ما هو الوضع القانوني للمادة 54؟",
+      "type": "repealed_article",
+      "expected_articles": [
+        54
+      ],
+      "retrieved_articles": [
+        54,
+        55,
+        59,
+        56,
+        67
+      ],
+      "cached": false,
+      "latency_ms": 4763.072600006126,
+      "status": "PASS"
+    },
+    {
+      "id": "repealed_54_en",
+      "question": "What does Article 54 say regarding legal associations?",
+      "type": "repealed_article",
+      "expected_articles": [
+        54
+      ],
+      "retrieved_articles": [
+        54,
+        53,
+        505,
+        506,
+        35
+      ],
+      "cached": false,
+      "latency_ms": 8785.907800018322,
+      "status": "PASS"
+    },
+    {
+      "id": "repealed_389_ar",
+      "question": "ما حكم المادة 389 من القانون المدني؟",
+      "type": "repealed_article",
+      "expected_articles": [
+        389
+      ],
+      "retrieved_articles": [
+        389,
+        393,
+        391,
+        394,
+        392
+      ],
+      "cached": false,
+      "latency_ms": 6264.942999987397,
+      "status": "PASS"
+    },
+    {
+      "id": "out_of_scope_murder_ar",
+      "question": "ما هي عقوبة القتل العمد مع سبق الإصرار في القانون المصري؟",
+      "type": "out_of_scope",
+      "expected_articles": [],
+      "retrieved_articles": [],
+      "cached": false,
+      "latency_ms": 4153.155999985756,
+      "status": "PASS (Refusal)"
+    },
+    {
+      "id": "out_of_scope_theft_en",
+      "question": "What is the criminal penalty for aggravated theft in Egypt?",
+      "type": "out_of_scope",
+      "expected_articles": [],
+      "retrieved_articles": [],
+      "cached": false,
+      "latency_ms": 4145.202799991239,
+      "status": "PASS (Refusal)"
+    },
+    {
+      "id": "out_of_scope_saudi_ar",
+      "question": "ما هي أحكام فسخ العقد في نظام المعاملات المدنية السعودي؟",
+      "type": "out_of_scope",
+      "expected_articles": [],
+      "retrieved_articles": [],
+      "cached": false,
+      "latency_ms": 341.33310001925565,
+      "status": "PASS (Refusal)"
+    },
+    {
+      "id": "exact_1_ar",
+      "question": "ماذا تنص المادة 1 بخصوص مصادر القانون وسريان النصوص التشريعية؟",
+      "type": "exact_article",
+      "expected_articles": [
+        1
+      ],
+      "retrieved_articles": [
+        1,
+        6,
+        7,
+        675,
+        9
+      ],
+      "cached": false,
+      "latency_ms": 12982.13809999288,
+      "status": "PASS"
+    },
+    {
+      "id": "exact_1_en",
+      "question": "What are the rules of statutory interpretation under Article 1?",
+      "type": "exact_article",
+      "expected_articles": [
+        1
+      ],
+      "retrieved_articles": [
+        1,
+        150,
+        116,
+        151,
+        916
+      ],
+      "cached": false,
+      "latency_ms": 12741.217000002507,
+      "status": "PASS"
+    },
+    {
+      "id": "semantic_good_faith_ar",
+      "question": "ما هي قواعد تنفيذ العقود طبقا لمبدأ حسن النية؟",
+      "type": "semantic_ar",
+      "expected_articles": [
+        148
+      ],
+      "retrieved_articles": [
+        148,
+        124,
+        1085,
+        723,
+        983
+      ],
+      "cached": false,
+      "latency_ms": 8336.146499990718,
+      "status": "PASS"
+    },
+    {
+      "id": "semantic_good_faith_en",
+      "question": "How must contracts be performed according to good faith requirements?",
+      "type": "semantic_en",
+      "expected_articles": [
+        148
+      ],
+      "retrieved_articles": [
+        148,
+        124,
+        966,
+        1118,
+        685
+      ],
+      "cached": false,
+      "latency_ms": 10501.823099999456,
+      "status": "PASS"
+    },
+    {
+      "id": "cache_pair_1a",
+      "question": "ما هي آثار العقد بالنسبة للمتعاقدين؟",
+      "type": "cache_paraphrase_pair",
+      "expected_articles": [
+        145,
+        147
+      ],
+      "retrieved_articles": [
+        145,
+        144,
+        106,
+        107,
+        671
+      ],
+      "cached": false,
+      "latency_ms": 11124.844400008442,
+      "status": "PASS"
+    },
+    {
+      "id": "cache_pair_1b",
+      "question": "ما هي آثار العقد بين المتعاقدين في القانون المدني؟",
+      "type": "cache_paraphrase_pair",
+      "expected_articles": [
+        145,
+        147
+      ],
+      "retrieved_articles": [
+        145,
+        144,
+        106,
+        107,
+        671
+      ],
+      "cached": true,
+      "latency_ms": 143.26209999853745,
+      "status": "PASS"
+    },
+    {
+      "id": "exact_418_ar",
+      "question": "ما هو تعريف عقد البيع وفقاً للمادة 418؟",
+      "type": "exact_article",
+      "expected_articles": [
+        418
+      ],
+      "retrieved_articles": [
+        418,
+        419,
+        422,
+        421,
+        438
+      ],
+      "cached": false,
+      "latency_ms": 9072.498299996369,
+      "status": "PASS"
+    },
+    {
+      "id": "exact_418_en",
+      "question": "What is the legal definition of sale under Article 418?",
+      "type": "exact_article",
+      "expected_articles": [
+        418
+      ],
+      "retrieved_articles": [
+        418,
+        421,
+        422,
+        473,
+        427
+      ],
+      "cached": false,
+      "latency_ms": 10889.799199998379,
+      "status": "PASS"
+    },
+    {
+      "id": "semantic_sale_definition_ar",
+      "question": "ما هو التزام البائع بنقل الملكية في عقد البيع مقابل ثمن نقدي؟",
+      "type": "semantic_ar",
+      "expected_articles": [
+        418
+      ],
+      "retrieved_articles": [
+        418,
+        430,
+        475,
+        204,
+        723
+      ],
+      "cached": false,
+      "latency_ms": 15026.770399999805,
+      "status": "PASS"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+[
+  {
+    "id": "civil",
+    "document_id": "egyptian_civil_code_1948",
+    "jurisdiction": "Egypt",
+    "law_type": "civil",
+    "law_name_ar": "القانون المدني المصري",
+    "law_name_en": "Egyptian Civil Code",
+    "law_year": 1948,
+    "law_number": "Law No. 131 of 1948",
+    "source_pdf": "data/law_books/القانون المدني المصري.pdf",
+    "processed_file": "data/processed/egyptian_civil_code.json",
+    "expected_article_range": [1, 1149],
+    "total_articles": 1149,
+    "repealed_count": 56,
+    "description_ar": "القانون العام للمعاملات والالتزامات والحقوق العينية والشخصية",
+    "description_en": "General code governing obligations, contracts, civil liability, and real rights"
+  },
+  {
+    "id": "arbitration",
+    "document_id": "egyptian_arbitration_law_1994",
+    "jurisdiction": "Egypt",
+    "law_type": "arbitration",
+    "law_name_ar": "قانون التحكيم المصري",
+    "law_name_en": "Egyptian Arbitration Law",
+    "law_year": 1994,
+    "law_number": "Law No. 27 of 1994",
+    "source_pdf": "data/law_books/قانون التحكيم المصري.pdf",
+    "processed_file": "data/processed/egyptian_arbitration_law.json",
+    "expected_article_range": [1, 58],
+    "total_articles": 58,
+    "repealed_count": 0,
+    "description_ar": "قانون التحكيم في المواد المدنية والتجارية الداخلية والدولية",
+    "description_en": "Law on arbitration in civil and commercial matters, domestic and international"
+  }
+]
